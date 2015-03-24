@@ -382,11 +382,11 @@ loader.addEventListener( 'load', function ( event  ) {
   var geometry = event.content;
   var material = new THREE.MeshBasicMaterial();
   material.wireframe = true;
-  //var texture = new THREE.ImageUtils.loadTexture("prnt.jpg");
-  //material.map = texture;
+  var texture = new THREE.ImageUtils.loadTexture("print.jpg");
+  material.map = texture;
   //texture.needsUpdate = true;
+  //geometry.computeTangents();
   var mesh = new THREE.Mesh(geometry, material);
-  //mesh.geometry.computeTangents();
 
   mesh.scale.set(10,10,10);
 
