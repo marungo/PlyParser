@@ -22,8 +22,8 @@ THREE.PLYLoader = function () {};
 
 var numBytesPerXYZ = 3 * 4; //3 4-byte floats
 var numBytesPerRGB = 3 * 4; //3 4-byte floats
-var numBytesPerFaceVertices = 1 + 3 * 4; // 1 uchar + 3 4-byte ints
-var numBytesPerFaceUVs = 1 + 6 * 4;  // 1 uchar + 6 4-byte floats
+var numBytesPerFaceVertices = 1 + 3 * 4; // 1 1-byte uchar + 3 4-byte ints
+var numBytesPerFaceUVs = 1 + 6 * 4;  // 1 1-byte uchar + 6 4-byte floats
 
 THREE.PLYLoader.prototype = {
 
@@ -143,6 +143,7 @@ THREE.PLYLoader.prototype = {
           console.log("unhandled", lineType, lineValues);
         }
       }
+    console.log("header: ", header);
     return header;
   },
 
@@ -187,15 +188,13 @@ THREE.PLYLoader.prototype = {
       );
       geometry.facesNeedUpdate = true;
 
-      geometry.faceVertexUvs.push(
-        new THREE.Vector2(elements[1][0], elements[1][1]));
-      geometry.uvsNeedUpdate = true;
-      geometry.faceVertexUvs.push(
-        new THREE.Vector2(elements[1][2], elements[1][3]));
-      geometry.uvsNeedUpdate = true;
-      geometry.faceVertexUvs.push(
-        new THREE.Vector2(elements[1][4], elements[1][5]));
-      geometry.uvsNeedUpdate = true;
+      var uvs = new THREE.Vector3();
+      uvs[0] = new THREE.Vector2(elements[1][0], elements[1][1]);
+      uvs[1] = new THREE.Vector2(elements[1][2], elements[1][3]);
+      uvs[2] = new THREE.Vector2(elements[1][4], elements[1][5]);
+
+      geometry.faceVertexUvs[0].push(uvs);
+
     }
     return geometry;
   },
@@ -302,7 +301,6 @@ THREE.PLYLoader.prototype = {
   parseBinary: function ( data ) {
 
     var geometry = new THREE.Geometry();
-    geometry.faceVertexUvs = [];
     var header = this.parseHeader( this.bin2str( data ) );
     var little_endian = (header.format === "binary_little_endian");
     //create body as DataView object to access the arraybuffer loaded as data
@@ -313,6 +311,8 @@ THREE.PLYLoader.prototype = {
     //if RGBs are present
     if (header.elements[0].properties.length > 3) {
       bodyStart = bodyStart - header.elements[0].count*numBytesPerRGB;
+    } else {
+      console.log("no RGB values. Not counting RGB float values")
     }
     body = new DataView(data, bodyStart);
     var loc = 0;
@@ -328,6 +328,8 @@ THREE.PLYLoader.prototype = {
             if (header.elements[currentElement].properties.length > 3) {
               rbg = this.binaryReadColors(header.elements[currentElement], body, loc, little_endian);
               loc += rbg[1];
+            } else {
+              //console.log("not reading colors. Do not exist.");
             }
 
             var vertexProperties = [vector3[0], rbg[0]];
@@ -378,17 +380,14 @@ var renderer = new THREE.WebGLRenderer();
 TW.mainInit(renderer,scene);
 
 var loader = new THREE.PLYLoader();
+var material = new THREE.MeshBasicMaterial();
+
 loader.addEventListener( 'load', function ( event  ) {
   var geometry = event.content;
-  var material = new THREE.MeshBasicMaterial();
-  material.wireframe = true;
-  var texture = new THREE.ImageUtils.loadTexture("print.jpg");
+  var texture = new THREE.ImageUtils.loadTexture("prnt.jpg");
   material.map = texture;
-  //texture.needsUpdate = true;
-  //geometry.computeTangents();
-  var mesh = new THREE.Mesh(geometry, material);
 
-  mesh.scale.set(10,10,10);
+  var mesh = new THREE.Mesh(geometry, material);
 
   scene.add(mesh);
   console.log(mesh);
@@ -397,10 +396,10 @@ loader.addEventListener( 'load', function ( event  ) {
 
 loader.load( "prnt.ply" );
 
-TW.cameraSetup(renderer, scene,
-               {minx: -30, maxx: 30,
-               miny: -30, maxy: 30,
-               minz: -30, maxz: 30});
+var state = TW.cameraSetup(renderer, scene,
+               {minx: -20, maxx: 20,
+               miny: -20, maxy: 20,
+               minz: -20, maxz: 20});
 
 
 </script>

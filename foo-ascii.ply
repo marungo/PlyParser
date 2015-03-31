@@ -1,7 +1,7 @@
 ply
 format ascii 1.0
 comment author: Greg Turk
-obj_info random information
+comment obj_info random information
 element vertex 8
 property float x
 property float y
