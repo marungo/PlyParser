@@ -1,9 +1,17 @@
+//Author: Mary Ruth Ngo
+
+//mesh.js parses a ply file. Ply file must provide
+//vertices, faces and faceVertexUVs. Color is optional.
+
 THREE.PLYLoader = function () {};
 
+//globals
 var numBytesPerXYZ = 3 * 4; //3 4-byte floats
 var numBytesPerRGB = 3 * 4; //3 4-byte floats
 var numBytesPerFaceVertices = 1 + 3 * 4; // 1 1-byte uchar + 3 4-byte ints
 var numBytesPerFaceUVs = 1 + 6 * 4;  // 1 1-byte uchar + 6 4-byte floats
+var smallest = [0,0,0];//for bounding box
+var biggest = [0,0,0];//for bounding box
 
 THREE.PLYLoader.prototype = {
 
@@ -25,23 +33,28 @@ THREE.PLYLoader.prototype = {
 
   },
 
+
   bin2str: function (buf) {
+    
     var array_buffer = new Int8Array(buf);
     var str = '';
 
     for (var i = 0; i < buf.byteLength; i++) {
       str += String.fromCharCode(array_buffer[i]); // implicitly assumes little-endian
     }
-
     return str;
   },
 
+
   isBinary: function( data ){
+    
     var header = this.parseHeader( this.bin2str( data ) );
     return header.format === "binary_little_endian";
   },
 
+
   parse: function ( data ) {
+    
     if (this.isBinary) {
       var geom = this.parseBinary(data);
     } else {
@@ -49,6 +62,7 @@ THREE.PLYLoader.prototype = {
     }
     return geom;
   },
+  
 
   parseHeader: function ( data ) {
     
@@ -69,18 +83,18 @@ THREE.PLYLoader.prototype = {
 
     function make_ply_element_property( propertValues ) {
       
-      var property = Object();
-      property.type = propertValues[0];
+        var property = Object();
+        property.type = propertValues[0];
 
-      if ( property.type === "list" ) {
-        
-        property.name = propertValues[3];
-        property.countType = propertValues[1];
-        property.itemType = propertValues[2];
+        if ( property.type === "list" ) {
+          
+          property.name = propertValues[3];
+          property.countType = propertValues[1];
+          property.itemType = propertValues[2];
 
-      } else {
-        property.name = propertValues[1];
-      }
+        } else {
+          property.name = propertValues[1];
+        }
 
       return property;
     }//end make_ply_element_property
@@ -96,36 +110,37 @@ THREE.PLYLoader.prototype = {
       
       switch( lineType ) {
 
-        case "ply": case "end_header":
-          break;
-        
-        case "format":
-          header.format = lineValues[0];
-          header.version = lineValues[1];
-          break;
-
-        case "comment":
-          header.comments.push(line);
-          break;
-
-        case "element":
-          currentElement = Object();
-          currentElement.name = lineValues[0];
-          currentElement.count = parseInt( lineValues[1] );
-          currentElement.properties = [];
-          header.elements.push(currentElement);
-          break;
+          case "ply": case "end_header":
+            break;
           
-        case "property":
-          currentElement.properties.push ( make_ply_element_property(lineValues) );
-          break;
+          case "format":
+            header.format = lineValues[0];
+            header.version = lineValues[1];
+            break;
 
-        default:
-          console.log("unhandled", lineType, lineValues);
-        }
+          case "comment":
+            header.comments.push(line);
+            break;
+
+          case "element":
+            currentElement = Object();
+            currentElement.name = lineValues[0];
+            currentElement.count = parseInt( lineValues[1] );
+            currentElement.properties = [];
+            header.elements.push(currentElement);
+            break;
+            
+          case "property":
+            currentElement.properties.push ( make_ply_element_property(lineValues) );
+            break;
+
+          default:
+            console.log("unhandled", lineType, lineValues);
+          }
       }
     return header;
   },
+
 
   postProcess: function ( geometry ) {
     
@@ -143,43 +158,52 @@ THREE.PLYLoader.prototype = {
       geometry.elementsNeedUpdate = true; 
     }
 
-    geometry.computeBoundingSphere();
+    var sphere = geometry.computeBoundingSphere();
 
     return geometry;
   },
+
 
   handleElement: function ( geometry, elementName, elements ) {
 
     if ( elementName === "vertex" ) {
 
-      geometry.vertices.push( 
-        new THREE.Vector3( elements[0][0], elements[0][1], elements[0][2] )
-      );
+        geometry.vertices.push( 
+          new THREE.Vector3( elements[0][0], elements[0][1], elements[0][2] )
+        );
 
-      geometry.useColor = true;
+        //keep track of smallest and largest of xyz values for bounding box
+        for (i in elements[0]) {
 
-      color = new THREE.Color();
-      color.setRGB( elements[1][0], elements[1][1], elements[1][2] );
-      
-      geometry.colors.push( color );
+            if (elements[0][i] < smallest[i]) {
+              smallest[i] = elements[0][i];
+            }
+            if (elements[0][i] > biggest[i]) {
+              biggest[i] = elements[0][i];
+            }
+        }
+
+        geometry.useColor = true;
+        color = new THREE.Color();
+        color.setRGB( elements[1][0], elements[1][1], elements[1][2] );
+        geometry.colors.push( color );
 
     } else if ( elementName === "face" ) {
 
-      geometry.faces.push(
-        new THREE.Face3( elements[0][0], elements[0][1], elements[0][2] )
-      );
+        geometry.faces.push(
+          new THREE.Face3( elements[0][0], elements[0][1], elements[0][2] )
+        );
 
-      var uvs = new THREE.Vector3();
-
-      uvs[0] = new THREE.Vector2(elements[1][0], elements[1][1]);
-      uvs[1] = new THREE.Vector2(elements[1][2], elements[1][3]);
-      uvs[2] = new THREE.Vector2(elements[1][4], elements[1][5]);
-
-      geometry.faceVertexUvs[0].push(uvs);
+        var uvs = new THREE.Vector3();
+        uvs[0] = new THREE.Vector2(elements[1][0], elements[1][1]);
+        uvs[1] = new THREE.Vector2(elements[1][2], elements[1][3]);
+        uvs[2] = new THREE.Vector2(elements[1][4], elements[1][5]);
+        geometry.faceVertexUvs[0].push(uvs);
 
     }
     return geometry;
   },
+
 
   binaryRead: function ( dataview, at, type, little_endian ) {
 
@@ -212,6 +236,7 @@ THREE.PLYLoader.prototype = {
     return result;
   },
 
+
   binaryReadFaceVertices: function ( currentElement, dataview, at, little_endian, vertexCount ) {
     var faceVertices = [];
     var numB = 0;
@@ -222,19 +247,18 @@ THREE.PLYLoader.prototype = {
 
     if (ucharResult[0] === 3) {
       for (i = 0; i < ucharResult[0]; i++) {
-        //expecting int
         var binaryResult = this.binaryRead(dataview, at + numB, currentElement.properties[0].itemType, little_endian);
         faceVertices.push(binaryResult[0]);
         numB += binaryResult[1];
       }
     } else {
-      numB += numBytesPerXYZ;
       alert("ucharResult was not 3: Please check compatibility of ply file");
     }
 
     var result = [faceVertices, numB];
     return result;
   },
+
 
   binaryReadTexCoords: function ( currentElement, dataview, at, little_endian ) {
 
@@ -252,13 +276,13 @@ THREE.PLYLoader.prototype = {
         numB += binaryResult[1];
       }
     } else {
-      numB += numBytesPerFaceUVs - 1;//discount uchar byte length
       alert("ucharResult was not 6: Please check compatibility of ply file");
     }
 
     var result = [texCoords, numB];
     return result;
   },
+
 
   parseBinary: function ( data ) {
 
@@ -282,39 +306,43 @@ THREE.PLYLoader.prototype = {
 
     for ( currentElement = 0; currentElement < header.elements.length ; currentElement ++ ) {
       for ( currentElementCount = 0; currentElementCount < header.elements[currentElement].count ; currentElementCount ++ ) {
-          if (header.elements[currentElement].name == 'vertex') {
+          if (header.elements[currentElement].name == 'vertex') {//handles vertices and vertex colors
 
-            var vector3 = this.binaryReadValue(header.elements[currentElement], body, loc, little_endian);
-            loc += vector3[1];//3 floats worth of bytes: 12
-            //if rgbs are present
-            var rbg = [ [0,0,0] , 0];
-            if (header.elements[currentElement].properties.length > 3) {
-              rbg = this.binaryReadValue(header.elements[currentElement], body, loc, little_endian);
-              loc += rbg[1];
-            }
+              //vertices
+              var vector3 = this.binaryReadValue(header.elements[currentElement], body, loc, little_endian);
+              loc += vector3[1];//3 floats worth of bytes: 12
 
-            var vertexProperties = [vector3[0], rbg[0]];
-            this.handleElement (geometry, header.elements[currentElement].name, vertexProperties);
+              //if rgbs are present
+              var rbg = [ [0,0,0] , 0];
+              if (header.elements[currentElement].properties.length > 3) {
+                rbg = this.binaryReadValue(header.elements[currentElement], body, loc, little_endian);
+                loc += rbg[1];
+              }
 
-        } else if (header.elements[currentElement].name == 'face') {
+              var vertexProperties = [vector3[0], rbg[0]];
+              this.handleElement (geometry, header.elements[currentElement].name, vertexProperties);
 
-            if (header.elements[currentElement].properties[0].name == 'vertex_indices') {
-                var faceVertices = this.binaryReadFaceVertices(header.elements[currentElement], body, loc, little_endian, header.elements[0].count);
-                loc += faceVertices[1];//1 uchar + 3 ints worth of bytes: 13
-            } else {
-                alert('header did not read vertex_indices');
-            }     
+          } else if (header.elements[currentElement].name == 'face') {//handles faces and face UVs
 
-            if (header.elements[currentElement].properties[1].name == 'texcoord') {
-                var texCoords = this.binaryReadTexCoords(header.elements[currentElement], body, loc, little_endian);
-                loc += texCoords[1];//6 floats + 1 uchar worth of bytes: 25
-            } else {
-                alert('header did not read texcoord');
-            }
+              //face vertices
+              if (header.elements[currentElement].properties[0].name == 'vertex_indices') {
+                  var faceVertices = this.binaryReadFaceVertices(header.elements[currentElement], body, loc, little_endian, header.elements[0].count);
+                  loc += faceVertices[1];//1 uchar + 3 ints worth of bytes: 13
+              } else {
+                  alert('header did not read vertex_indices');
+              }
 
-            var element = [faceVertices[0], texCoords[0]];
-            this.handleElement(geometry, header.elements[currentElement].name, element);
-        }
+              //texture coordinates
+              if (header.elements[currentElement].properties[1].name == 'texcoord') {
+                  var texCoords = this.binaryReadTexCoords(header.elements[currentElement], body, loc, little_endian);
+                  loc += texCoords[1];//6 floats + 1 uchar worth of bytes: 25
+              } else {
+                  alert('header did not read texcoord');
+              }
+
+              var element = [faceVertices[0], texCoords[0]];
+              this.handleElement(geometry, header.elements[currentElement].name, element);
+          }
       }
     }
     return this.postProcess( geometry );
