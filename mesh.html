@@ -35,11 +35,15 @@
       //geometry built from ply
       var geometry = event.content;
       geometry.boundingBox = {
-        min: smallest,
-        max: biggest
+        max: biggest,
+        min: smallest
       }
-
-      console.log(geometry.boundingBox);
+      var bb = geometry.boundingBox;
+      var center = new THREE.Vector3( (bb.max[0] - bb.min[0]) / 2,
+                                      (bb.max[1] - bb.min[1]) / 2,
+                                      (bb.max[2] - bb.min[2]) / 2 );
+      //controls.target.copy( center );
+      //controls.update();
 
       //jpg texture maps onto material
       var material = new THREE.MeshBasicMaterial();
@@ -54,6 +58,7 @@
       mesh.rotation.x = Math.PI/2;
       mesh.rotation.y = Math.PI;
       mesh.position.y = -(geometry.boundingBox.max[1] - geometry.boundingBox.min[1])/2;
+
 
       scene.add(mesh);
       console.log(mesh);
