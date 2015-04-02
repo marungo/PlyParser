@@ -39,6 +39,8 @@
         max: biggest
       }
 
+      console.log(geometry.boundingBox);
+
       //jpg texture maps onto material
       var material = new THREE.MeshBasicMaterial();
       var texture = new THREE.ImageUtils.loadTexture("prnt.jpg");
@@ -58,7 +60,7 @@
 
   } );
 
-  loader.load( "iron.ply" );
+  loader.load( "prnt.ply" );
 
   //renderer
   var renderer = new THREE.WebGLRenderer();
