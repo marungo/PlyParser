@@ -28,13 +28,12 @@
   controls.damping = 0.2;
   controls.addEventListener( 'change', render );
 
-  var loader = new THREE.PLYLoader();
+  var loader = new THREE.PLYLoader("prnt.ply", "prnt.jpg");
 
   loader.addEventListener( 'load', function ( event  ) {
       
       //geometry built from ply
       var geometry = event.content;
-      console.log(geometry.boundingSphere);
 
       //jpg texture maps onto material
       var material = new THREE.MeshBasicMaterial();
@@ -48,9 +47,9 @@
 
       var biggest = bbox.box.max;
       var smallest = bbox.box.min;
-      var center = new THREE.Vector3( (biggest.x - Math.abs(smallest.x) ) / 2,
-                                      (biggest.y - Math.abs(smallest.y) ) / 2,
-                                      (biggest.z - Math.abs(smallest.z) ) / 2 );
+      var center = new THREE.Vector3( (biggest.x + smallest.x ) / 2,
+                                      (biggest.y + smallest.y ) / 2,
+                                      (biggest.z + smallest.z ) / 2 );
 
       //camera is now dynamic - every geometry will be placed in origin.
       mesh.position.set( -center.x, -center.y, -center.z );
@@ -59,11 +58,11 @@
       geometry.boundingBox = bbox.box;
 
       //uncomment these to see axis and bounding box
-      //var axis = buildAxis();
-      //scene.add( bbox );      
+      var axis = buildAxis();
+      scene.add( bbox );      
 
       scene.add(mesh);
-      console.log(mesh);
+      // console.log(mesh);
   } );
 
   loader.load( "prnt.ply" );

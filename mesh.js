@@ -3,7 +3,7 @@
 //mesh.js parses a ply file. Ply file must provide
 //vertices, faces and faceVertexUVs. Color is optional.
 
-THREE.PLYLoader = function () {};
+THREE.PLYLoader = function (url_geom, url_texture) {};
 
 //globals
 var numBytesPerXYZ = 3 * 4; //3 4-byte floats
@@ -15,7 +15,7 @@ THREE.PLYLoader.prototype = {
 
   constructor: THREE.PLYLoader,
 
-  load: function ( file, callback ) {
+  load: function ( url_geom, callback ) {
     var scope = this;
     var request = new XMLHttpRequest();
 
@@ -25,7 +25,7 @@ THREE.PLYLoader.prototype = {
       //if ( callback ) callback( geometry );
     }, false );
 
-    request.open( 'GET', file, true );
+    request.open( 'GET', url_geom, true );
     request.responseType = "arraybuffer";
     request.send( null );
 
