@@ -23,27 +23,29 @@
 
   //camera with orbit controlling
   var camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 0.1, 1000 );
-  camera.position.set(0, 0, 20);
+  camera.position.set(0, 0, 20);//camera faces the front of the mesh
   controls = new THREE.OrbitControls( camera );
   controls.damping = 0.2;
   controls.addEventListener( 'change', render );
 
-  var loader = new THREE.PLYLoader("prnt.ply", "prnt.jpg");
+  //Ply file and texture file to be used as arguments of THREE.PLYLoader
+  var url_geom = "http://localhost:8000/PlyParser/prnt.ply";
+  var url_texture = "http://localhost:8000/PlyParser/prnt.jpg";
 
-  loader.addEventListener( 'load', function ( event  ) {
-      
+  var loader = new THREE.PLYLoader( url_geom, url_texture );
+
+  loader.addEventListener( 'load', function ( event ) {
       //geometry built from ply
-      var geometry = event.content;
+      var meshInfo = event.content;
 
-      //jpg texture maps onto material
-      var material = new THREE.MeshBasicMaterial();
-      var texture = new THREE.ImageUtils.loadTexture("prnt.jpg");
-      material.map = texture;
+      var geometry = meshInfo[0];
+      var material = meshInfo[1];
 
-      mesh = new THREE.Mesh(geometry, material);
+      mesh = new THREE.Mesh( geometry, material );
 
       var bbox = new THREE.BoundingBoxHelper( mesh, 0x36D439 );
       bbox.update();
+      console.log(bbox);
 
       var biggest = bbox.box.max;
       var smallest = bbox.box.min;
@@ -51,21 +53,22 @@
                                       (biggest.y + smallest.y ) / 2,
                                       (biggest.z + smallest.z ) / 2 );
 
-      //camera is now dynamic - every geometry will be placed in origin.
+      //camera is now dynamic - every geometry will be placed so that its
+      //center is at the origin.
       mesh.position.set( -center.x, -center.y, -center.z );
       bbox.update();
 
       geometry.boundingBox = bbox.box;
 
       //uncomment these to see axis and bounding box
-      var axis = buildAxis();
-      scene.add( bbox );      
+      // var axis = buildAxis();
+      // scene.add( bbox );      
 
       scene.add(mesh);
       // console.log(mesh);
   } );
 
-  loader.load( "prnt.ply" );
+  loader.load( geomFile );
 
   //renderer
   var renderer = new THREE.WebGLRenderer();

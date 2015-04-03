@@ -3,19 +3,24 @@
 //mesh.js parses a ply file. Ply file must provide
 //vertices, faces and faceVertexUVs. Color is optional.
 
-THREE.PLYLoader = function (url_geom, url_texture) {};
-
 //globals
 var numBytesPerXYZ = 3 * 4; //3 4-byte floats
 var numBytesPerRGB = 3 * 4; //3 4-byte floats
 var numBytesPerFaceVertices = 1 + 3 * 4; // 1 1-byte uchar + 3 4-byte ints
 var numBytesPerFaceUVs = 1 + 6 * 4;  // 1 1-byte uchar + 6 4-byte floats
+var geomFile;
+var textureFile;
+
+THREE.PLYLoader = function ( a, b ) { 
+  geomFile = a;
+  textureFile = b;
+};
 
 THREE.PLYLoader.prototype = {
 
   constructor: THREE.PLYLoader,
 
-  load: function ( url_geom, callback ) {
+  load: function ( event, callback ) {
     var scope = this;
     var request = new XMLHttpRequest();
 
@@ -29,7 +34,7 @@ THREE.PLYLoader.prototype = {
     request.responseType = "arraybuffer";
     request.send( null );
 
-  },
+  }, 
 
 
   bin2str: function (buf) {
@@ -158,7 +163,11 @@ THREE.PLYLoader.prototype = {
 
     var sphere = geometry.computeBoundingSphere();
 
-    return geometry;
+    var material = new THREE.MeshBasicMaterial();
+    var texture = new THREE.ImageUtils.loadTexture( url_texture  );
+    material.map = texture;
+
+    return [geometry, material];
   },
 
 
