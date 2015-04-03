@@ -10,8 +10,6 @@ var numBytesPerXYZ = 3 * 4; //3 4-byte floats
 var numBytesPerRGB = 3 * 4; //3 4-byte floats
 var numBytesPerFaceVertices = 1 + 3 * 4; // 1 1-byte uchar + 3 4-byte ints
 var numBytesPerFaceUVs = 1 + 6 * 4;  // 1 1-byte uchar + 6 4-byte floats
-var smallest = [0,0,0];//for bounding box
-var biggest = [0,0,0];//for bounding box
 
 THREE.PLYLoader.prototype = {
 
@@ -171,17 +169,6 @@ THREE.PLYLoader.prototype = {
         geometry.vertices.push( 
           new THREE.Vector3( elements[0][0], elements[0][1], elements[0][2] )
         );
-
-        //keep track of smallest and largest of xyz values for bounding box
-        for (i in elements[0]) {
-
-            if (elements[0][i] < smallest[i]) {
-              smallest[i] = elements[0][i];
-            }
-            if (elements[0][i] > biggest[i]) {
-              biggest[i] = elements[0][i];
-            }
-        }
 
         geometry.useColor = true;
         color = new THREE.Color();
@@ -350,3 +337,41 @@ THREE.PLYLoader.prototype = {
 };
 
 THREE.EventDispatcher.prototype.apply( THREE.PLYLoader.prototype );
+
+function buildAxis() {
+  var axis = new THREE.Object3D();
+
+  //origin
+  var geom = new THREE.SphereGeometry(.2);
+  var mat = new THREE.MeshBasicMaterial();
+  var mesh = new THREE.Mesh(geom, mat);
+
+  var axisGeom = new THREE.BoxGeometry(.2, 5, .2);
+  //x axis is bright pink
+  var xMat = new THREE.MeshBasicMaterial({color: 0xFF69B4});
+  //y axis is bright blue
+  var yMat = new THREE.MeshBasicMaterial({color: 0x4169E1});
+  //z axis it bright green
+  var zMat = new THREE.MeshBasicMaterial({color: 0x32CD32});
+
+
+  var xAxis = new THREE.Mesh(axisGeom, xMat);
+  xAxis.rotation.z = -Math.PI/2;
+  xAxis.position.x = 2.5;
+
+  var yAxis = new THREE.Mesh(axisGeom, yMat);
+  yAxis.position.y = 2.5;
+
+  var zAxis = new THREE.Mesh(axisGeom, zMat);
+  zAxis.rotation.x = Math.PI/2;
+  zAxis.position.z = 2.5;
+  
+  axis.add(mesh);
+  axis.add(xAxis);
+  axis.add(yAxis);
+  axis.add(zAxis);
+
+  scene.add(axis);
+  return axis;
+}
+
