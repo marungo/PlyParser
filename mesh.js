@@ -163,10 +163,13 @@ THREE.PLYLoader.prototype = {
 
     var sphere = geometry.computeBoundingSphere();
 
+    //load image and map onto material
     var material = new THREE.MeshBasicMaterial();
-    var texture = new THREE.ImageUtils.loadTexture( url_texture  );
-    material.map = texture;
 
+    THREE.ImageUtils.crossOrigin = '';
+    var texture = THREE.ImageUtils.loadTexture(url_texture);
+
+    material.map = texture;
     return [geometry, material];
   },
 
@@ -383,4 +386,20 @@ function buildAxis() {
   scene.add(axis);
   return axis;
 }
+function upload(imageURL) {
+  var fd = new FormData();
+  fd.append("image", imageURL); // Append the file
+  // Get your own key: http://api.imgur.com/
+ 
+  // Create the XHR (Cross-Domain XHR FTW!!!)
+  var xhr = new XMLHttpRequest();
+  xhr.withCredentials = true;
+  xhr.open("GET", imageURL); // Boooom!
+  xhr.onload = function() {
+    // Big win!
+    // The URL of the image is:
+    JSON.parse(xhr.responseText);
+   }
+   xhr.send(fd);
+ }
 

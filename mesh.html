@@ -1,4 +1,6 @@
  <html>
+
+
   <head>
     <title>Ply Parser Project</title>
     <style>
@@ -6,13 +8,14 @@
       canvas {
           display: block;
           margin: 25px auto;
-          width: 90%;
+          width: 80%;
           height: 100%
       }
     </style>
     <script src="Libraries/three.min.js"></script>
     <script src ="Libraries/OrbitControls.js"></script>
     <script src ="mesh.js"></script>
+
 
   </head>
   <body>
@@ -29,8 +32,9 @@
   controls.addEventListener( 'change', render );
 
   //Ply file and texture file to be used as arguments of THREE.PLYLoader
-  var url_geom = "http://localhost:8000/PlyParser/prnt.ply";
-  var url_texture = "http://localhost:8000/PlyParser/prnt.jpg";
+  var url_geom = "https://3dplusme-prod.s3.amazonaws.com/QA_MODEL/RICH-LAPTOP-B-2015-02-11/1mij5kglt8ER2JtQ.ply";
+  
+  var url_texture = "https://3dplusme-prod.s3.amazonaws.com/QA_MODEL/RICH-LAPTOP-B-2015-02-11/ASIRkUDI0v7ORj6Y.jpg";
 
   var loader = new THREE.PLYLoader( url_geom, url_texture );
 
@@ -40,6 +44,8 @@
 
       var geometry = meshInfo[0];
       var material = meshInfo[1];
+
+      //Function that actually makes the request to google book api
 
       mesh = new THREE.Mesh( geometry, material );
 
